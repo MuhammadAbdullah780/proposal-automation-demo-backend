@@ -1,0 +1,7 @@
+API's
+   1. create conversation
+   2. add messages conversation
+   3. get conversation
+   4. form submission 
+   5. get form data 
+   6. generate catalog or proposal 
