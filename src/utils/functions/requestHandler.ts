@@ -5,18 +5,23 @@ type Handler<Payload> = (args: {
   req: Request;
   res: Response;
   raiseException: RaiseException;
-}) => Promise<void | SuccessResponse<Payload>>;
+}) => Promise<SuccessResponse<Payload>>;
 
 type RaiseException = (msg: string, code: number) => Promise<any>;
 
 type SuccessResponse<T> = {
   message: string;
   data: T;
-  isSuccess: true;
+  isSuccess?: true;
+};
+
+type RequestHandlerOptions = {
+  responseStatus?: number;
 };
 
 export const requestHandler = <T extends Record<string, any> = any>(
   handler: Handler<T>,
+  { responseStatus = 200 }: RequestHandlerOptions = {},
 ) => {
   const executableFunc = async (req: Request, res: Response) => {
     let isException = false;
@@ -31,17 +36,21 @@ export const requestHandler = <T extends Record<string, any> = any>(
     };
 
     try {
-      const handlerResponse = await handler({
+      const {
+        data,
+        message,
+        isSuccess = true,
+      } = await handler({
         res,
         req,
         raiseException,
       });
 
       if (!isException) {
-        return res.status(200).json({
-          message: handlerResponse?.message,
-          data: handlerResponse?.data,
-          isSuccess: true,
+        return res.status(responseStatus).json({
+          message,
+          data,
+          isSuccess,
         });
       }
     } catch (error: any) {

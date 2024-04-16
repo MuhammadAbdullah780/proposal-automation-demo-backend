@@ -1,19 +1,14 @@
 import { Router } from "express";
+import { checkValidation } from "../middlewares/checkValidation";
 import {
   addConversationMessages,
   addNewConversation,
   fetchConversations,
-} from "../controllers";
-import { checkValidation } from "../middlewares/checkValidation";
-import { AddConversationDto } from "../types/dtos/addConversation";
+} from "../controllers/conversation.controller";
 
 const routes = Router();
 
-routes.post<any, any, any, AddConversationDto>(
-  "/new",
-  checkValidation("addConversation"),
-  addNewConversation,
-);
+routes.post("/new", checkValidation("addConversation"), addNewConversation);
 routes.get("/", fetchConversations);
 routes.post("/add-messages", addConversationMessages);
 
