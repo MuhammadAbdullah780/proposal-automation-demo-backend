@@ -30,6 +30,7 @@ const referenceHistory = new mongoose.Schema<IReferenceHistory>(
           _id: false, // Explicitly exclude _id for messages subdocument
         },
       ],
+      default: [],
     },
     reference_type: {
       type: String,

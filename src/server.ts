@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import baseRoutes from "./routes";
+import { OpenAIService } from "./services/openai";
 
 /**
  * Init express
@@ -17,6 +18,10 @@ app.use(express.urlencoded({ extended: true }));
  */
 app.get("/", (req, res) => {
   console.log("MONGO___DB___URI", process.env.MONGO_URL);
+  const ai = new OpenAIService();
+
+  // ai.prepareConversationBuffer();
+
   res.send("Hello World");
 });
 

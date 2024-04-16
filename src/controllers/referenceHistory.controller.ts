@@ -3,23 +3,22 @@ import {
   IReferenceHistory,
   ReferenceHistory,
 } from "../models/referenceHistory";
+import { DbRepository } from "../services/dbRepository";
+import { ReferenceHistoryService } from "../services/referenceHistory";
 import {
   AddReferenceHistoryDto,
   CreateReferenceHistoryDto,
 } from "../types/dtos/referenceHistory";
 import { ReferenceHistoryEnum } from "../types/enums";
 import { requestHandler } from "../utils/functions/requestHandler";
-import { DbRepository } from "../services/dbRepository";
-import { checkInvalidValuesFromEnum } from "../utils/functions";
 
 export const fetchReferenceHistory = requestHandler(
   async ({ req, raiseException }) => {
     //
+    const service = new ReferenceHistoryService();
     const referenceType = req.query?.reference_type as ReferenceHistoryEnum;
-    const isInvalidReferenceType = !!(
-      referenceType &&
-      checkInvalidValuesFromEnum(ReferenceHistoryEnum, referenceType)
-    );
+    const isInvalidReferenceType =
+      service.checkForInvalidReferenceType(referenceType);
 
     //
     if (isInvalidReferenceType) {
@@ -42,10 +41,12 @@ export const fetchReferenceHistory = requestHandler(
 
 export const appendMessagesToReferenceHistory = requestHandler(
   async ({ req, raiseException }) => {
+    //
+    const service = new ReferenceHistoryService();
     const body: AddReferenceHistoryDto = req.body;
-    const isInvalidReferenceType = !!(
-      body?.referenceType &&
-      checkInvalidValuesFromEnum(ReferenceHistoryEnum, body?.referenceType)
+
+    const isInvalidReferenceType = service.checkForInvalidReferenceType(
+      body?.referenceType,
     );
 
     // Check for invalid reference type
@@ -60,20 +61,21 @@ export const appendMessagesToReferenceHistory = requestHandler(
       reference_type: body?.referenceType,
     });
 
-    //
-    body.messages.forEach((item) => {
-      fetchedRecord?.messages.forEach((record) => {
-        if (new RegExp(record.question, "i").test(item.question)) {
-          record.answers = [...record.answers, ...item.answers];
-        } else {
-          fetchedRecord.messages.push(item);
-        }
-      });
-    });
+    if (!fetchedRecord) {
+      return raiseException(
+        "History for particular reference not found",
+        httpStatus.NOT_FOUND,
+      );
+    }
+
+    const messages = service.removeDuplicateMessages(
+      fetchedRecord?.messages || [],
+      body?.messages,
+    );
 
     const updatedRecord = await ReferenceHistory.findOneAndUpdate(
       { reference_type: body?.referenceType },
-      { messages: fetchedRecord?.messages },
+      { $set: { messages } },
       { new: true },
     );
 
