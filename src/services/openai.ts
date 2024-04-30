@@ -1,171 +1,176 @@
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { ChatOpenAI } from "@langchain/openai";
+import httpStatus from "http-status";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { formatDocumentsAsString } from "langchain/util/document";
+import { CustomError } from "../utils/classes/customError";
+import { PineconeService } from "./pinecone";
+
 /**
- * ! Still working on this file
+ * Abstracts
  */
+abstract class OpenAIServiceAbstract {
+  abstract invoke(arg: InvokeArgs): Promise<any>;
+  abstract trainText(arg: TrainTextArgs): Promise<any>;
+}
 
-// import { ChatOpenAI, OpenAI } from "@langchain/openai";
-// import { Message } from "../types/common";
-// import {
-//   BufferMemory,
-//   ChatMessageHistory,
-//   ConversationSummaryMemory,
-// } from "langchain/memory";
-// import { HumanMessage, AIMessage } from "langchain/schema";
-// import { PromptTemplate } from "@langchain/core/prompts";
-// import { LLMChain } from "langchain/chains";
-
-// type ContructorArgs = {
-//   automationType?: "proposal_automation" | "project_catalog_automation";
-//   messages?: Message;
-// };
-
-// const dummyData = [
-//   {
-//     input: "Hi How are you",
-//     output: "I am fine",
-//   },
-//   {
-//     input: "My name is Abdullah",
-//     output: "Ok",
-//   },
-// ];
-
-// export class OpenAIService {
-//   //
-//   openai: ChatOpenAI = new ChatOpenAI({
-//     model: "gpt-3.5-turbo",
-//     temperature: 0.6,
-//     maxRetries: 1,
-//     verbose: true,
-//   });
-//   buffer?: BufferMemory;
-
-//   constructor({
-//     automationType = "proposal_automation",
-//     messages = [],
-//   }: ContructorArgs = {}) {
-//     this.prepareConversationBuffer();
-//   }
-
-//   async initPromptTemplate() {}
-
-//   async prepareConversationBuffer() {
-//     // Parsing the messages into input and output form
-
-//     const pastMessages = [
-//       new HumanMessage("My name's Jonas"),
-//       new AIMessage("Nice to meet you, Jonas!"),
-//     ];
-
-//     this.buffer = new BufferMemory({
-//       chatHistory: new ChatMessageHistory(pastMessages),
-//     });
-
-//     console.log(this.buffer.chatHistory.getMessages(), "BUFFER_____");
-
-//     const template = new PromptTemplate({
-//       inputVariables: ["propsal_descripiton", "propsal_name"],
-//       template: `generate a proposal with the help of the following informations
-//          propsal_name: {propsal_name}
-//          propsal_descripiton: {propsal_descripiton}
-//       `,
-//     });
-
-//     const chain = new LLMChain({
-//       llm: this.openai,
-//       prompt: template,
-//       memory: this.buffer,
-//     });
-
-//     const outcome = await chain.invoke("");
-
-//     console.log(outcome);
-//   }
-
-//   async generateDummyTextPrompt() {}
-
-//   async predictOutcome() {}
-
-//   #convertMessagesToBuffer() {}
-
-//   async #trash() {
-//     const memory = new ConversationSummaryMemory({
-//       memoryKey: "chat_history",
-//       llm: new OpenAI({ model: "gpt-3.5-turbo", temperature: 0.6 }),
-//     });
-
-//     dummyData.forEach(async (item) => {
-//       await memory.saveContext({ input: item.input }, { output: item.output });
-//     });
-
-//     const messages = await memory.chatHistory.getMessages();
-
-//     const summary = await memory.predictNewSummary(messages, "");
-//     console.log({ summary, messages, memory });
-//   }
-// }
-
-// /?
 /**
- * Python work for better understanding
- *
+ * Typings
  */
+type Temperature = 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1;
+type GptModel = "gpt-3.5-turbo" | "gpt-4";
 
-// from langchain.chains.conversation.base import ConversationChain
-// from langchain_openai import ChatOpenAI
-// from langchain.memory import ConversationBufferWindowMemory
-// from typing import Any, List
+type BaseRunnableChainInput = {
+  query: string;
+};
+type ProposalRunnableChainArgs = {
+  projectTitle: string;
+  projectDescription: string;
+};
 
-// class ChatbotAI:
-//     history_messages: List[Any]
-//     model: ChatOpenAI
+type TrainTextArgs = {
+  namespace: string;
+  textToTrain: string;
+};
+type InvokeArgs = {
+  namespace: string;
+  query: string;
+};
 
-//     def __init__(
-//         self,
-//         message_history=[],
-//         model_name: str = "gpt-3.5-turbo",
-//         temperature: float | int = 0.6,
-//     ):
-//         self.model = ChatOpenAI(
-//             model=model_name,
-//             temperature=temperature,
-//             max_retries=1,
-//             streaming=True,
-//             verbose=True,
-//         )
-//         self.history_messages = message_history
+type GenerateProposalArgs = {
+  namespace: string;
+  query: string;
+};
 
-//     def predict_outcome(self, prompt: str) -> str:
-//         # Memory
-//         buffer = ConversationBufferWindowMemory(return_messages=True, k=2)
+export class OpenAIService implements OpenAIServiceAbstract {
+  constructor(
+    private readonly model: GptModel = "gpt-3.5-turbo",
+    private readonly temperature: Temperature = 0.6,
+  ) {}
 
-//         # Prepending History with memory
-//         self._merge_buffer_with_history(memory=buffer)
+  async invoke({ namespace, query }: InvokeArgs) {
+    const isNonActiveNamespace =
+      !(await new PineconeService().isNamespaceExists(namespace));
 
-//         # Chain
-//         chain = ConversationChain(
-//             llm=self.model,
-//             verbose=True,
-//             memory=buffer,
-//         )
+    if (isNonActiveNamespace) {
+      return new CustomError({
+        msg: "No Namespace Exists with that name",
+        statusCode: httpStatus.NOT_FOUND,
+      });
+    }
 
-//         # Predict a response
-//         result = chain.predict(input=prompt)
-//         return result
+    const llm = new ChatOpenAI({
+      model: this.model,
+      temperature: this.temperature,
+      verbose: true,
+      maxRetries: 2,
+    });
 
-//     def predict_outcome_using_rag(self) -> str:
-//         return ""
+    // Initiating Prompt Template
+    const template = PromptTemplate.fromTemplate(
+      `
+        Answer the following query based on the context you have:
+        
+        QUERY: {query}
+        CONTEXT: {context}
+      `,
+    );
 
-//     def _merge_buffer_with_history(
-//         self,
-//         memory: ConversationBufferWindowMemory,
-//     ) -> None:
+    // Retriever
+    const retriever = await new PineconeService().getRetriever({ namespace });
 
-//         if not len(self.history_messages):
-//             return
+    // Runnable Sequence
+    const chain = RunnableSequence.from([
+      {
+        //
+        query: async ({ query }: BaseRunnableChainInput) => query,
+        //
+        context: async ({ query }: BaseRunnableChainInput) => {
+          const relevantDocs = await retriever.getRelevantDocuments(query);
+          const serialized = formatDocumentsAsString(relevantDocs);
+          console.log(serialized, "SERIALIZED_____RECORD______");
+          return serialized;
+        },
+      },
+      template,
+      llm,
+      new StringOutputParser(),
+    ]);
 
-//         # Saving messages to buffer
-//         for item in self.history_messages:
-//             memory.save_context(
-//                 {"input": item["prompt"]},
-//                 {"output": item["reply"]},
-//             )
+    return await chain.invoke({ query });
+  }
+
+  async trainText({ namespace, textToTrain }: TrainTextArgs) {
+    const pineconeService = new PineconeService();
+
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 200,
+      separators: ["\n\n", "\n", " ", "."],
+      chunkOverlap: 30,
+    });
+
+    const docs = await splitter.createDocuments([textToTrain]);
+
+    return await pineconeService.addDocuments(docs, namespace);
+  }
+
+  async generateProposal({ namespace, query }: GenerateProposalArgs) {
+    const isNonActiveNamespace =
+      !(await new PineconeService().isNamespaceExists(namespace));
+
+    if (isNonActiveNamespace) {
+      return new CustomError({
+        msg: "No Namespace Exists with that name",
+        statusCode: httpStatus.NOT_FOUND,
+      });
+    }
+
+    const llm = new ChatOpenAI({
+      model: this.model,
+      temperature: this.temperature,
+      verbose: true,
+      maxRetries: 2,
+    });
+
+    // Initiating Prompt Template
+    const template = PromptTemplate.fromTemplate(
+      `
+        Generate a proposal based on the following information:
+        =======================================================
+        CONTEXT: {context}
+        PROJECT_TITLE: {projectTitle}
+        PROJECT_DESCRIPTION: {projectDescripiton}
+      `,
+    );
+
+    // Retriever
+    const retriever = await new PineconeService().getRetriever({ namespace });
+
+    // Runnable Sequence
+    const chain = RunnableSequence.from([
+      {
+        //
+        projectTitle: async ({ projectTitle }: ProposalRunnableChainArgs) =>
+          projectTitle,
+        //
+        projectDescription: async ({
+          projectDescription,
+        }: ProposalRunnableChainArgs) => projectDescription,
+        //
+        context: async () => {
+          const relevantDocs = await retriever.getRelevantDocuments("");
+          const serialized = formatDocumentsAsString(relevantDocs);
+          console.log(serialized, "SERIALIZED_____RECORD______");
+          return serialized;
+        },
+      },
+      template,
+      llm,
+      new StringOutputParser(),
+    ]);
+
+    return await chain.invoke({ query });
+  }
+}

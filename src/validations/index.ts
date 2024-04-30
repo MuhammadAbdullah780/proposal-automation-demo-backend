@@ -1,13 +1,13 @@
 import { addConversationSchema } from "./conversation";
-import { formSubmissionSchema } from "./formSubmission";
+import { submitProposalFormSchema } from "./formSubmission";
 import {
-  addReferenceHistorySchema,
   createReferenceHistorySchema,
+  updateReferenceHistorySchema,
 } from "./referenceHistory";
 
 export const validators = {
-  formSubmission: formSubmissionSchema,
   addConversation: addConversationSchema,
-  addReferenceHistory: addReferenceHistorySchema,
   createReferenceHistory: createReferenceHistorySchema,
+  updateReferenceHistory: updateReferenceHistorySchema,
+  submitProposalForm: submitProposalFormSchema,
 };

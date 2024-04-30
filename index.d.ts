@@ -10,6 +10,8 @@ declare global {
     interface ProcessEnv {
       MONGO_URL?: string;
       PORT?: string | number;
+      OPENAI_API_KEY?: string;
+      PINECONE_INDEX?: string;
     }
   }
 

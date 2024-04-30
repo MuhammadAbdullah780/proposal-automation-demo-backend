@@ -1,9 +1,0 @@
-{
-  "reference_type": "company",
-  "messages": [
-    {
-      "question": "This is the question",
-      "answers": ["This is the answer"]
-    }
-  ]
-}

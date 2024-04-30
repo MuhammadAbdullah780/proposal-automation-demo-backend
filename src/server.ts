@@ -1,6 +1,13 @@
 import express, { Request, Response } from "express";
 import baseRoutes from "./routes";
-import { OpenAIService } from "./services/openai";
+import { CustomError } from "./utils/classes/customError";
+import { PineconeService } from "./services/pinecone";
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { TEXT_TO_TRAIN } from "./utils/constants/textToTrain";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { generateProposal } from "./utils/functions/generateProposal";
+import bodyParser from "body-parser";
 
 /**
  * Init express
@@ -12,16 +19,13 @@ const app = express();
  */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
 
 /**
  * Root API
  */
-app.get("/", (req, res) => {
-  console.log("MONGO___DB___URI", process.env.MONGO_URL);
-  const ai = new OpenAIService();
-
-  // ai.prepareConversationBuffer();
-
+app.get("/", async (req, res) => {
   res.send("Hello World");
 });
 
@@ -33,8 +37,10 @@ app.use("/api/v1", baseRoutes);
 /**
  * Error Handler
  */
-app.use((err: any, req: Request, res: Response) => {
-  return res.status(500).json({ message: "Something looks wrong :( !!!" });
+app.use((err: CustomError, req: Request, res: Response) => {
+  return res
+    .status(err.statusCode || 500)
+    .json({ message: err.message || "Something looks wrong :( !!!" });
 });
 
 /**
