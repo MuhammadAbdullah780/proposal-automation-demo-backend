@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import { ReferenceHistory } from "../models/referenceHistory";
 import { SubmitProposalFormDto } from "../types/dtos/formSubmission";
-import { generateProposal } from "../utils/functions/generateProposal";
+import { generateProposalFromGemini } from "../utils/functions/generateProposal";
 import { requestHandler } from "../utils/functions/requestHandler";
 import { FormSubmissions } from "../models/formSubmissions";
 
@@ -22,7 +22,7 @@ export const submitProposalForm = requestHandler(
     }
 
     // Ask openai to generate proposal
-    const AIResponse = await generateProposal({
+    const AIResponse = await generateProposalFromGemini({
       context: targetReference?.text || "",
       description: payload.projectDescription,
       title: payload.projectTitle,

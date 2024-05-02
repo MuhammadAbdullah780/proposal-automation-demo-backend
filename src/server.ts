@@ -1,13 +1,6 @@
 import express, { Request, Response } from "express";
 import baseRoutes from "./routes";
 import { CustomError } from "./utils/classes/customError";
-import { PineconeService } from "./services/pinecone";
-import { ChatOpenAI } from "@langchain/openai";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { TEXT_TO_TRAIN } from "./utils/constants/textToTrain";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { generateProposal } from "./utils/functions/generateProposal";
-import bodyParser from "body-parser";
 
 /**
  * Init express

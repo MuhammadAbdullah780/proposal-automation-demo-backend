@@ -8,10 +8,14 @@ declare global {
   // Extends
   namespace NodeJS {
     interface ProcessEnv {
-      MONGO_URL?: string;
-      PORT?: string | number;
-      OPENAI_API_KEY?: string;
-      PINECONE_INDEX?: string;
+      MONGO_URL: string;
+      PORT: string | number;
+      OPENAI_API_KEY: string;
+      GEMINI_API_KEY: string;
+      PINECONE_INDEX: string;
+      PINECONE_DIMENSIONS: string;
+      PINECONE_API_KEY: string;
+      PINECONE_ENVIRONMENT: string;
     }
   }
 
