@@ -11,6 +11,7 @@ import {
 } from "../types/dtos/referenceHistory";
 import { ReferenceHistoryEnum } from "../types/enums";
 import { requestHandler } from "../utils/functions/requestHandler";
+import { Types } from "mongoose";
 
 export const fetchReferenceHistory = requestHandler(
   async ({ req, raiseException }) => {
@@ -35,6 +36,26 @@ export const fetchReferenceHistory = requestHandler(
     return {
       data,
       message: "Successfully fetched the reference history",
+    };
+  },
+);
+
+export const fetchSpecificReference = requestHandler(
+  async ({ req, raiseException }) => {
+    const identifier = req.params.referenceId as string;
+
+    const fetchedReference = await ReferenceHistory.findById(identifier);
+
+    if (!fetchedReference) {
+      raiseException(
+        "The refreence you are trying to update is not included in our record",
+        httpStatus.NOT_FOUND,
+      );
+    }
+
+    return {
+      data: fetchedReference!,
+      message: "Fetched the relevant reference",
     };
   },
 );
@@ -123,18 +144,10 @@ export const createReferenceHistory = requestHandler(
 
 export const updateReferenceHistory = requestHandler(
   async ({ req, raiseException }) => {
-    const service = new ReferenceHistoryService();
+    // const service = new ReferenceHistoryService();
     const repo = new DbRepository<IReferenceHistory>(ReferenceHistory);
     const referenceType = req.params?.referenceType;
-    const { text = "" }: UpdateReferenceHistoryDto = req.body;
-
-    // Check for  Invalid Reference Type
-    const isInvalidReferenceType =
-      service.checkForInvalidReferenceType(referenceType);
-
-    if (isInvalidReferenceType) {
-      raiseException("Invalid Reference Type", httpStatus.CONFLICT);
-    }
+    const { text = "", rich_text = "" }: UpdateReferenceHistoryDto = req.body;
 
     // Check if record exists
     const isDocExists = await repo.isDocExits({
@@ -152,7 +165,7 @@ export const updateReferenceHistory = requestHandler(
 
     const updatedDoc = await ReferenceHistory.findOneAndUpdate(
       { reference_type: referenceType },
-      { text },
+      { text, rich_text },
       { new: true, runValidators: true },
     );
 
@@ -166,6 +179,55 @@ export const updateReferenceHistory = requestHandler(
     return {
       data: updatedDoc,
       message: "Successfully updated the reference",
+    };
+  },
+);
+
+export const listReferences = requestHandler(async () => {
+  console.log("HI___");
+  const referencesListing = await ReferenceHistory.aggregate([
+    {
+      $project: {
+        // _id: 0,
+        reference_type: 1,
+      },
+    },
+  ]);
+
+  return {
+    data: referencesListing,
+    message: "Successfully fetched possibble References",
+  };
+});
+
+export const deleteReference = requestHandler(
+  async ({ req, raiseException }) => {
+    const id: string | Types.ObjectId = new Types.ObjectId(req.params?.id);
+    const repo = new DbRepository<IReferenceHistory>(ReferenceHistory);
+
+    console.log(id, "ID_____");
+
+    const isDocExists = repo.isDocExits({ filter: { _id: id } });
+
+    if (!isDocExists) {
+      raiseException(
+        "The record you are trying to delete is not exists in our record.",
+        httpStatus.NOT_FOUND,
+      );
+    }
+
+    const deletedRecord = await ReferenceHistory.findByIdAndDelete(id);
+
+    if (!deletedRecord) {
+      raiseException(
+        "Error occured while deleting the record",
+        httpStatus.NOT_IMPLEMENTED,
+      );
+    }
+
+    return {
+      data: deletedRecord!,
+      message: "Record deleted Successfully",
     };
   },
 );

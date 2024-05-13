@@ -1,7 +1,11 @@
 import { Router } from "express";
 import {
   createReferenceHistory,
+  deleteReference,
   fetchReferenceHistory,
+  fetchSpecificReference,
+  listReferences,
+  updateReferenceHistory,
 } from "../controllers/referenceHistory.controller";
 import { checkValidation } from "../middlewares/checkValidation";
 
@@ -21,6 +25,9 @@ routes.post(
   createReferenceHistory,
 );
 
-routes.patch("/:referenceType/update", () => {});
+routes.patch("/:referenceType/update", updateReferenceHistory);
+routes.get("/list-references", listReferences);
+routes.get("/:referenceId", fetchSpecificReference);
+routes.delete("/:id/delete", deleteReference);
 
 export default routes;

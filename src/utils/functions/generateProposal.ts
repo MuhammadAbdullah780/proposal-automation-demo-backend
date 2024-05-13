@@ -18,7 +18,7 @@ type RunnableArgs = {
   projectDescription: string;
 };
 
-export const generateProposal = async ({
+export const generateProposalFromOpenAI = async ({
   context,
   description,
   title,

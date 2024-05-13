@@ -1,13 +1,19 @@
 import httpStatus from "http-status";
 import { ReferenceHistory } from "../models/referenceHistory";
 import { SubmitProposalFormDto } from "../types/dtos/formSubmission";
-import { generateProposalFromGemini } from "../utils/functions/generateProposal";
+import {
+  generateProposalFromGemini,
+  generateProposalFromOpenAI,
+} from "../utils/functions/generateProposal";
 import { requestHandler } from "../utils/functions/requestHandler";
 import { FormSubmissions } from "../models/formSubmissions";
+import { ModalType } from "../types/enums";
 
 export const submitProposalForm = requestHandler(
   async ({ req, raiseException }) => {
     const payload: SubmitProposalFormDto = req.body;
+
+    console.log("req__.body", payload);
 
     // Check if record exists
     const targetReference = await ReferenceHistory.findOne({
@@ -21,12 +27,22 @@ export const submitProposalForm = requestHandler(
       );
     }
 
+    let AIResponse: string;
+
     // Ask openai to generate proposal
-    const AIResponse = await generateProposalFromGemini({
-      context: targetReference?.text || "",
-      description: payload.projectDescription,
-      title: payload.projectTitle,
-    });
+    if (payload?.llm === ModalType.CHAT_GPT) {
+      AIResponse = await generateProposalFromOpenAI({
+        context: targetReference?.text || "",
+        description: payload.projectDescription,
+        title: payload.projectTitle,
+      });
+    } else {
+      AIResponse = await generateProposalFromGemini({
+        context: targetReference?.text || "",
+        description: payload.projectDescription,
+        title: payload.projectTitle,
+      });
+    }
 
     // Create a new document in mongodb in a form submission collection
     const createdRecord = await FormSubmissions.create({
@@ -34,6 +50,7 @@ export const submitProposalForm = requestHandler(
         project_title: payload.projectTitle,
         project_description: payload.projectDescription,
       },
+      generated_from: payload?.llm,
       response: AIResponse,
     });
 

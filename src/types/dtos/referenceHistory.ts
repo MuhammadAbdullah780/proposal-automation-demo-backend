@@ -4,6 +4,9 @@ export type CreateReferenceHistoryDto = Pick<
   IReferenceHistory,
   "reference_type"
 > &
-  Pick<IReferenceHistory, "text">;
+  Pick<IReferenceHistory, "text" | "rich_text">;
 
-export type UpdateReferenceHistoryDto = Pick<IReferenceHistory, "text">;
+export type UpdateReferenceHistoryDto = Pick<
+  IReferenceHistory,
+  "text" | "rich_text"
+>;

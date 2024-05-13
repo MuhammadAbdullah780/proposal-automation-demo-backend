@@ -12,6 +12,7 @@ export interface IReferenceHistory {
   // }[];
   text: string;
   reference_type: ReferenceHistoryEnum;
+  rich_text: string;
 }
 
 const referenceHistory = new mongoose.Schema<IReferenceHistory>(
@@ -37,11 +38,14 @@ const referenceHistory = new mongoose.Schema<IReferenceHistory>(
       type: String,
       required: [true, REQUIRED_FIELD_MSG],
     },
+    rich_text: {
+      type: String,
+      required: [true, REQUIRED_FIELD_MSG],
+    },
     reference_type: {
       type: String,
       unique: true,
       index: true,
-      enum: Object.values(ReferenceHistoryEnum),
       required: [true, REQUIRED_FIELD_MSG],
     },
   },
