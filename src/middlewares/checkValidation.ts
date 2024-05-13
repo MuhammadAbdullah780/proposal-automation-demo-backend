@@ -5,13 +5,17 @@ import httpStatus from "http-status";
 export const checkValidation = (target: keyof typeof validators) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log(target, req.body);
+      console.log({
+        target,
+        body: req.body,
+        // parsed: JSON.parse(req.body),
+      });
       const validated = await validators[target].validateAsync(req.body);
       req.body = validated;
       next();
-    } catch (err) {
+    } catch (err: any) {
       return res.status(httpStatus.UNPROCESSABLE_ENTITY).json({
-        message: "Error Occured while validating request body",
+        message: err?.message || "Error Occured while validating request body",
       });
     }
   };

@@ -4,3 +4,8 @@ export enum ReferenceHistoryEnum {
   YOUSUF_QADRI_EXECUTIVE = "yousuf-qadri-executive",
   KUMAIL_RAZA_EXECUTIVE = "kumail-raza-executive",
 }
+
+export enum ModalType {
+  CHAT_GPT = "gpt",
+  GEMINI = "gemini",
+}
