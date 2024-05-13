@@ -39,7 +39,6 @@
     "start": "ts-node .",
     "dev": "nodemon src/index.ts",
     "type-check": "tsc --noEmit",
-    "lint": "npx eslint .",
-    "prepare": "husky"
+    "lint": "npx eslint ."
   }
 }
