@@ -40,8 +40,6 @@
     "dev": "nodemon src/index.ts",
     "type-check": "tsc --noEmit",
     "lint": "npx eslint .",
-    "prepare": "husky",
-    "preinstall": "nvm use",
-    "prebuild": "nvm use"
+    "prepare": "husky"
   }
 }
