@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import baseRoutes from "./routes";
 import { CustomError } from "./utils/classes/customError";
+import cors from "cors";
 
 /**
  * Init express
@@ -10,6 +11,7 @@ const app = express();
 /**
  * Set basic express settings
  */
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // app.use(bodyParser.urlencoded({ extended: false }));
