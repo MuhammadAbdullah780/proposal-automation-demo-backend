@@ -32,7 +32,7 @@ export const generateProposalFromOpenAI = async ({
 
   const template = PromptTemplate.fromTemplate(
     `
-        Generate a proposal in a cover letter in a rich text format and also add the list of services we provide.
+        Generate a proposal in a cover letter in a Proper Markdown format and also add the list of services we provide.
 
           CONTEXT: {context}
           DESCRIPTION: {description}
@@ -79,7 +79,7 @@ export const generateProposalFromGemini = async ({
 
   const template = PromptTemplate.fromTemplate(
     `
-    Generate a proposal in a cover letter in a rich text format and also add the list of services we provide.
+    Generate a proposal in a cover letter in a Proper Markdown format and also add the list of services we provide.
 
     CONTEXT: {context}
     DESCRIPTION: {projectDescription}

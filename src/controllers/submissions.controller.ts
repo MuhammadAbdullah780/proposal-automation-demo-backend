@@ -87,3 +87,53 @@ export const submitProjectCatalogForm = requestHandler(async () => {
     message: "",
   };
 });
+
+type FormSubmissionQueryDto = {
+  generated_from?: string;
+  search_query?: string;
+};
+
+export const fetchSubmissions = requestHandler(
+  async ({ raiseException, req }) => {
+    const { generated_from, search_query }: FormSubmissionQueryDto =
+      req?.query || {};
+
+    console.log(req.query, "FILTER__APPLIED");
+
+    const data = await FormSubmissions.aggregate([
+      {
+        $match: {
+          $and: [
+            {
+              ...(generated_from
+                ? {
+                    generated_from,
+                  }
+                : {}),
+              ...(search_query
+                ? {
+                    $or: [
+                      {
+                        "payload.project_title": new RegExp(search_query, "i"),
+                      },
+                    ],
+                  }
+                : {}),
+            },
+          ],
+        },
+      },
+    ]);
+
+    console.log(data, "DATA_____");
+
+    if (!data?.length) {
+      raiseException("No Records Found", httpStatus.NO_CONTENT);
+    }
+
+    return {
+      data,
+      message: "Successfully fetched the submissions",
+    };
+  },
+);

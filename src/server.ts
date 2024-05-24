@@ -21,6 +21,20 @@ app.use(express.urlencoded({ extended: true }));
  * Root API
  */
 app.get("/", async (req, res) => {
+  function extractValues(text: string) {
+    const pattern = /\{([^}]*)\}/g; // Regular expression to match curly braces and their content
+    const matches = text.match(pattern);
+    if (matches) {
+      return matches.map((match: any) => match.slice(1, -1));
+    } else {
+      return [];
+    }
+  }
+
+  console.log(
+    extractValues("Hello My name is {firstName}} {lastName} {firstName}"),
+  );
+
   res.send("Hello World");
 });
 
