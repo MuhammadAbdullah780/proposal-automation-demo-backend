@@ -44,3 +44,30 @@ export const fetchPrompts = requestHandler(async ({ raiseException }) => {
     message: "",
   };
 });
+
+export const deletePrompt = requestHandler(async ({ raiseException, req }) => {
+  const id: string = req?.params?.id;
+  const repo = new DbRepository<IPrompt>(Prompt);
+
+  const isDocExists = await repo?.isDocExits({
+    filter: { _id: id },
+  });
+
+  if (!isDocExists) {
+    raiseException(
+      "The prompt you are trying to delete is not included in our database",
+      httpStatus.NOT_FOUND,
+    );
+  }
+
+  const deletedData = await Prompt.findByIdAndDelete(id);
+
+  if (!deletedData) {
+    raiseException("Error while deleting the data", httpStatus.NOT_IMPLEMENTED);
+  }
+
+  return {
+    data: deletedData || {},
+    message: "Record deleted successfully",
+  };
+});

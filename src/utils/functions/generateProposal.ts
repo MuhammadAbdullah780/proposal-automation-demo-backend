@@ -1,27 +1,23 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { marked } from "marked";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatOpenAI } from "@langchain/openai";
 
 type GenerateProposalArgs = {
-  title: string;
-  description: string;
   context: string;
+  prompt: string;
 };
 
 type RunnableArgs = {
   context: string;
-  projectTitle: string;
-  projectDescription: string;
+  prompt: string;
 };
 
 export const generateProposalFromOpenAI = async ({
   context,
-  description,
-  title,
+  prompt = "",
 }: GenerateProposalArgs) => {
   const ai = new ChatOpenAI({
     maxTokens: 1024,
@@ -32,12 +28,11 @@ export const generateProposalFromOpenAI = async ({
 
   const template = PromptTemplate.fromTemplate(
     `
-        Generate a proposal in a cover letter in a Proper Markdown format and also add the list of services we provide.
-
-          CONTEXT: {context}
-          DESCRIPTION: {description}
-          TITLE: {title}
-        `,
+      Generate a Response in markdown format by Utilizing the following prompt and context: 
+  
+      Prompt --> {prompt}
+      Context --> {context}
+    `,
   );
 
   const resp = await template
@@ -45,11 +40,10 @@ export const generateProposalFromOpenAI = async ({
     .pipe(new StringOutputParser())
     .invoke({
       context,
-      description,
-      title,
+      prompt,
     });
 
-  const resMark = await marked(resp);
+  // const resMark = await marked(resp);
   /**
    * For Streaming
    */
@@ -57,13 +51,12 @@ export const generateProposalFromOpenAI = async ({
   //     console.log(chunk, "CHUNK____");
   //   }
 
-  return resMark;
+  return resp;
 };
 
 export const generateProposalFromGemini = async ({
   context,
-  description,
-  title,
+  prompt,
 }: GenerateProposalArgs) => {
   const llm = new ChatGoogleGenerativeAI({
     apiKey: process.env.GEMINI_API_KEY,
@@ -79,18 +72,16 @@ export const generateProposalFromGemini = async ({
 
   const template = PromptTemplate.fromTemplate(
     `
-    Generate a proposal in a cover letter in a Proper Markdown format and also add the list of services we provide.
-
-    CONTEXT: {context}
-    DESCRIPTION: {projectDescription}
-    TITLE: {projectTitle}
-      `,
+      Generate a Response in markdown format by Utilizing the following prompt and context: 
+  
+      Prompt --> {prompt}
+      Context --> {context}
+    `,
   );
+
   const chain = RunnableSequence.from([
     {
-      projectTitle: ({ projectTitle }: RunnableArgs) => projectTitle,
-      projectDescription: ({ projectDescription }: RunnableArgs) =>
-        projectDescription,
+      prompt: ({ prompt }: RunnableArgs) => prompt,
       context: ({ context }: RunnableArgs) => context,
     },
     template,
@@ -100,10 +91,17 @@ export const generateProposalFromGemini = async ({
 
   const resp = await chain.invoke({
     context,
-    projectDescription: description,
-    projectTitle: title,
+    prompt,
   });
 
   console.log(resp, "RESP________");
   return resp;
 };
+
+// `
+// Generate a proposal in a cover letter in a Proper Markdown format and also add the list of services we provide.
+
+// CONTEXT: {context}
+// DESCRIPTION: {projectDescription}
+// TITLE: {projectTitle}
+//   `,

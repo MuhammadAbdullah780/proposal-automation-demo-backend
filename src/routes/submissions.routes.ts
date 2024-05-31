@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { checkValidation } from "../middlewares/checkValidation";
 import {
+  createSubmission,
   fetchSubmissions,
   submitProposalForm,
 } from "../controllers/submissions.controller";
@@ -12,6 +13,7 @@ routes.post(
   checkValidation("submitProposalForm"),
   submitProposalForm,
 );
+routes.post("/create", checkValidation("createSubmission"), createSubmission);
 
 routes.get("/", fetchSubmissions);
 

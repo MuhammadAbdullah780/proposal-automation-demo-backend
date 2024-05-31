@@ -1,5 +1,8 @@
 import { addConversationSchema } from "./conversation";
-import { submitProposalFormSchema } from "./formSubmission";
+import {
+  createSubmissionSchema,
+  submitProposalFormSchema,
+} from "./formSubmission";
 import { createPromptSchema } from "./prompts";
 import {
   createReferenceHistorySchema,
@@ -12,4 +15,5 @@ export const validators = {
   updateReferenceHistory: updateReferenceHistorySchema,
   submitProposalForm: submitProposalFormSchema,
   createPrompt: createPromptSchema,
+  createSubmission: createSubmissionSchema,
 };
