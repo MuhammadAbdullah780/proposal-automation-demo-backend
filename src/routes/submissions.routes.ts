@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { checkValidation } from "../middlewares/checkValidation";
-import { submitProposalForm } from "../controllers/submissions.controller";
+import {
+  createSubmission,
+  fetchSubmissions,
+  submitProposalForm,
+} from "../controllers/submissions.controller";
 
 const routes = Router();
 
@@ -9,5 +13,8 @@ routes.post(
   checkValidation("submitProposalForm"),
   submitProposalForm,
 );
+routes.post("/create", checkValidation("createSubmission"), createSubmission);
+
+routes.get("/", fetchSubmissions);
 
 export default routes;
