@@ -33,7 +33,7 @@ export const requestHandler = <T extends Record<string, any> = any>(
     ) => {
       isException = true;
       const err = new CustomError({ msg, statusCode: code });
-      return res.status(err.statusCode).json(err.serialize());
+      res.status(err.statusCode).json(err.serialize());
     };
 
     try {
