@@ -13,6 +13,7 @@ exports.requestHandler = void 0;
 const customError_1 = require("../classes/customError");
 const requestHandler = (handler, { responseStatus = 200 } = {}) => {
     const executableFunc = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        // console.log(res?.status(200).json({ mesg: "fd" }), "RESPONSE_________");
         let isException = false;
         const raiseException = (msg, code) => __awaiter(void 0, void 0, void 0, function* () {
             isException = true;

@@ -10,14 +10,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateProposalFromGemini = exports.generateProposalFromOpenAI = void 0;
-const openai_1 = require("@langchain/openai");
-const prompts_1 = require("@langchain/core/prompts");
-const output_parsers_1 = require("@langchain/core/output_parsers");
-const marked_1 = require("marked");
-const google_genai_1 = require("@langchain/google-genai");
 const generative_ai_1 = require("@google/generative-ai");
+const output_parsers_1 = require("@langchain/core/output_parsers");
+const prompts_1 = require("@langchain/core/prompts");
 const runnables_1 = require("@langchain/core/runnables");
-const generateProposalFromOpenAI = (_a) => __awaiter(void 0, [_a], void 0, function* ({ context, description, title, }) {
+const google_genai_1 = require("@langchain/google-genai");
+const openai_1 = require("@langchain/openai");
+const generateProposalFromOpenAI = (_a) => __awaiter(void 0, [_a], void 0, function* ({ context, prompt = "", }) {
     const ai = new openai_1.ChatOpenAI({
         maxTokens: 1024,
         verbose: true,
@@ -25,31 +24,29 @@ const generateProposalFromOpenAI = (_a) => __awaiter(void 0, [_a], void 0, funct
         model: "gpt-3.5-turbo",
     });
     const template = prompts_1.PromptTemplate.fromTemplate(`
-        Generate a proposal in a cover letter in a rich text format and also add the list of services we provide.
-
-          CONTEXT: {context}
-          DESCRIPTION: {description}
-          TITLE: {title}
-        `);
+      Generate a Response in markdown format by Utilizing the following prompt and context: 
+  
+      Prompt --> {prompt}
+      Context --> {context}
+    `);
     const resp = yield template
         .pipe(ai)
         .pipe(new output_parsers_1.StringOutputParser())
         .invoke({
         context,
-        description,
-        title,
+        prompt,
     });
-    const resMark = yield (0, marked_1.marked)(resp);
+    // const resMark = await marked(resp);
     /**
      * For Streaming
      */
     //   for await (const chunk of resp) {
     //     console.log(chunk, "CHUNK____");
     //   }
-    return resMark;
+    return resp;
 });
 exports.generateProposalFromOpenAI = generateProposalFromOpenAI;
-const generateProposalFromGemini = (_b) => __awaiter(void 0, [_b], void 0, function* ({ context, description, title, }) {
+const generateProposalFromGemini = (_b) => __awaiter(void 0, [_b], void 0, function* ({ context, prompt, }) {
     const llm = new google_genai_1.ChatGoogleGenerativeAI({
         apiKey: process.env.GEMINI_API_KEY,
         model: "gemini-pro",
@@ -62,16 +59,14 @@ const generateProposalFromGemini = (_b) => __awaiter(void 0, [_b], void 0, funct
         ],
     });
     const template = prompts_1.PromptTemplate.fromTemplate(`
-    Generate a proposal in a cover letter in a rich text format and also add the list of services we provide.
-
-    CONTEXT: {context}
-    DESCRIPTION: {projectDescription}
-    TITLE: {projectTitle}
-      `);
+      Generate a Response in markdown format by Utilizing the following prompt and context: 
+  
+      Prompt --> {prompt}
+      Context --> {context}
+    `);
     const chain = runnables_1.RunnableSequence.from([
         {
-            projectTitle: ({ projectTitle }) => projectTitle,
-            projectDescription: ({ projectDescription }) => projectDescription,
+            prompt: ({ prompt }) => prompt,
             context: ({ context }) => context,
         },
         template,
@@ -80,10 +75,15 @@ const generateProposalFromGemini = (_b) => __awaiter(void 0, [_b], void 0, funct
     ]);
     const resp = yield chain.invoke({
         context,
-        projectDescription: description,
-        projectTitle: title,
+        prompt,
     });
     console.log(resp, "RESP________");
     return resp;
 });
 exports.generateProposalFromGemini = generateProposalFromGemini;
+// `
+// Generate a proposal in a cover letter in a Proper Markdown format and also add the list of services we provide.
+// CONTEXT: {context}
+// DESCRIPTION: {projectDescription}
+// TITLE: {projectTitle}
+//   `,

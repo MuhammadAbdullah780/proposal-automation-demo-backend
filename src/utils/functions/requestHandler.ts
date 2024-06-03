@@ -23,7 +23,8 @@ export const requestHandler = <T extends Record<string, any> = any>(
   handler: Handler<T>,
   { responseStatus = 200 }: RequestHandlerOptions = {},
 ) => {
-  const executableFunc = async (req: Request, res: Response) => {
+  const executableFunc = async (req: any, res: any) => {
+    // console.log(res?.status(200).json({ mesg: "fd" }), "RESPONSE_________");
     let isException = false;
 
     const raiseException: RaiseException = async (

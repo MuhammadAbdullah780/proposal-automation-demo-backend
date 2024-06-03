@@ -5,4 +5,6 @@ const checkValidation_1 = require("../middlewares/checkValidation");
 const submissions_controller_1 = require("../controllers/submissions.controller");
 const routes = (0, express_1.Router)();
 routes.post("/proposal/create", (0, checkValidation_1.checkValidation)("submitProposalForm"), submissions_controller_1.submitProposalForm);
+routes.post("/create", (0, checkValidation_1.checkValidation)("createSubmission"), submissions_controller_1.createSubmission);
+routes.get("/", submissions_controller_1.fetchSubmissions);
 exports.default = routes;

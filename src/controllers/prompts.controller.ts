@@ -41,7 +41,7 @@ export const fetchPrompts = requestHandler(async ({ raiseException }) => {
 
   return {
     data,
-    message: "",
+    message: "Successfully fetched the Prompts",
   };
 });
 

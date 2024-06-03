@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const prompts_controller_1 = require("../controllers/prompts.controller");
+const checkValidation_1 = require("../middlewares/checkValidation");
+const routes = (0, express_1.Router)();
+routes.get("/", prompts_controller_1.fetchPrompts);
+routes.post("/create", (0, checkValidation_1.checkValidation)("createPrompt"), prompts_controller_1.createPrompt);
+routes.delete("/:id/delete", prompts_controller_1.deletePrompt);
+exports.default = routes;
